@@ -1,3 +1,4 @@
+import csv
 import numpy as np
 from scipy.io import wavfile
 import samplerate
@@ -42,7 +43,7 @@ class DataReader:
 
         """
         beatfile = '{}{}/{}.txt'.format(self.beatpath, album, song)
-        # chordfile = '{}{}/{}/{}_{}.lab'.format(self.chordpath, album, song, song, pitch)
+        chordfile = '{}{}/{}/{}_{}.lab'.format(self.chordpath, album, song, song, pitch)
         recfile = '{}{}/{}/{}_{}.wav'.format(self.recpath, album, song, song, pitch)
 
         # read WAV file as ndarray
