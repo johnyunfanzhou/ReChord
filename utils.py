@@ -93,7 +93,9 @@ class ChordReader:
         '''
         beat_file = '{}{}/{}.txt'.format(self.beat_path, album, song)
         chord_file = '{}{}/{}.lab'.format(self.chord_path, album, song)
-        
+
+        pitch = pitch % 12
+
         # read beat file and convert it to ndarray 
         beat = np.loadtxt(beat_file, delimiter=' ')[:, 0]
 
