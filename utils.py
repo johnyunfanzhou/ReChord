@@ -126,7 +126,7 @@ class ChordReader:
         
         # construct the chord_vector where each element of this vector is a one-hot code representing the chord of the beat
         num_beat = np.shape(beat)[0]
-        chord_vector = np.zeros([num_beat, encode_length])
+        chord_vector = np.zeros([num_beat, self.encode_length])
 
         a = 0
         tmp = chord[a][1]
@@ -222,7 +222,7 @@ class ChordReader:
                     tmp = chord[a][1]
 
         # pitch shift the labels of the chord 
-        chord_vector_shifted = np.zeros([num_beat, encode_length])
+        chord_vector_shifted = np.zeros([num_beat, self.encode_length])
         for j in range(num_beat):
             chord_vector_shifted[j]= chord_vector[j][pitch, :] + chord_vector[j][:, pitch]
             
