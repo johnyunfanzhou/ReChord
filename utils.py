@@ -173,6 +173,7 @@ class ChordReader:
             chord_vector_shifted = np.zeros(chord_vector.shape)
             chord_vector_shifted[:, 0:(2 * pitch)] = chord_vector[:, (24 - 2 * pitch):24]
             chord_vector_shifted[:, (2 * pitch):24] = chord_vector[:, 0:(24 - 2 * pitch)]
+            chord_vector_shifted[:, 24] = chord_vector[:, 24]
 
             return chord_vector_shifted
 
