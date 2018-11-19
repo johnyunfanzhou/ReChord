@@ -105,7 +105,6 @@ class ChordReader:
         """
         beat_file = '{}{}/{}.txt'.format(self.beat_path, album, song)
         chord_file = '{}{}/{}.lab'.format(self.chord_path, album, song)
-
         pitch = pitch % 12
 
         # read beat timings (from the beat file) and convert it to ndarray
@@ -171,14 +170,12 @@ class ChordReader:
                     chord_vector[i][2 * root + short_hand] = 1
 
             # pitch shift the labels of the chord
-            if pitch != 0:
-                chord_vector_currpitch = chord_vector[:, :self.encode_length - 1]
-                chord_vector_shifted = np.zeros(chord_vector_currpitch.shape)
-                chord_vector_shifted[:, (2 * pitch):] = chord_vector_currpitch[:, :(-2 * pitch)]
-                chord_vector_shifted[:, :(2 * pitch)] = chord_vector_currpitch[:, (-2 * pitch):]
-                chord_vector = np.concatenate((chord_vector_shifted, chord_vector[:, -1]), axis=-1)
+            chord_vector_shifted = np.zeros(chord_vector.shape)
+            chord_vector_shifted[:, 0:(2 * pitch)] = chord_vector[:, (24 - 2 * pitch):24]
+            chord_vector_shifted[:, (2 * pitch):24] = chord_vector[:, 0:(24 - 2 * pitch)]
 
-            return chord_vector
+            return chord_vector_shifted
+
         elif self.encode_length == 41:
             raise NotImplementedError
 
