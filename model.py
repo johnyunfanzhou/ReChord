@@ -19,9 +19,9 @@ class CNNReChord(nn.Module):
 
         self.config = config
 
-        self.output_size = 24
+        self.output_size = 25
         if mode == 'advanced':
-            self.output_size = 40
+            self.output_size = 41
             raise NotImplementedError
 
         # MODEL 0
@@ -34,7 +34,7 @@ class CNNReChord(nn.Module):
             self.size_after_conv = size_after_conv
             # MLP layers
             self.fc1 = nn.Linear(size_after_conv, 64)
-            self.fc2 = nn.Linear(64, 24)
+            self.fc2 = nn.Linear(64, 25)
         else:
             raise NotImplementedError
 

@@ -8,7 +8,7 @@ from model import CNNReChord
 
 samples_per_beat = 3072
 beats_per_window = 9
-encode_length = 24
+encode_length = 25
 data = [('01', '01'), ('01', '02'), ('01', '03'), ('01', '04'), ('01', '05'), ('01', '06'), ('01', '07'),
         ('01', '08'), ('01', '09'), ('01', '10'), ('01', '11'), ('01', '12'), ('01', '13'), ('01', '14'),
         ('02', '01'), ('02', '02'), ('02', '03'), ('02', '04'), ('02', '06'), ('02', '07'), ('02', '08'),
@@ -119,11 +119,11 @@ def main(batch_size, lr, epochs, config=0, pre_trained=-1):
         model_file_name = './result/config{}/preliminary_model{}.pt'.format(config, epoch)
         torch.save(model, model_file_name)
         with open('./result/config{}/result.txt'.format(config), 'a+') as file:
-            file.write('Preliminary model %d: Average training accuracy: %.4f | Average validation accuracy: %.4f\n'.format(
+            file.write('Preliminary model %d: Average training accuracy: %.4f | Average validation accuracy: %.4f\n' % (
                 epoch, average_train_acc, average_val_acc
             ))
         print('Model saved as {}.'.format(model_file_name))
 
 
 if __name__ == "__main__":
-    main(64, 0.001, 5, config=0, pre_trained=0)
+    main(64, 0.001, 50, config=0, pre_trained=49)
