@@ -2,8 +2,8 @@ from utils import ChordReader
 import numpy as np
 
 
-def process_features(available_data, encode_length):
-    cr = ChordReader(encode_length)
+def process_features(available_data, mode='simple'):
+    cr = ChordReader(mode)
     for album, song in available_data:
         print('Processing album {} song {} ...'.format(album, song))
         for pitch in [-5, -4, -3, -2, -1, 0, 1, 2, 3, 4, 5, 6]:
@@ -24,4 +24,4 @@ if __name__ == '__main__':
             ('07', '08'), ('07', '09'), ('07', '10'), ('07', '11'), ('07', '12'), ('07', '13'), ('07', '14'),
             ('12', '01'), ('12', '02'), ('12', '03'), ('12', '04'), ('12', '05'), ('12', '06'), ('12', '07'),
             ('12', '08'), ('12', '09'), ('12', '10'), ('12', '11'), ('12', '12')]
-    process_features(data, 24)
+    process_features(data)
