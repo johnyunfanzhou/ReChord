@@ -47,11 +47,11 @@ def load_model(lr, config=0, pre_trained=-1):
     if pre_trained >= 0:
         model_file = './result/config{}/preliminary_model{}.pt'.format(config, pre_trained)
         model = torch.load(model_file)
-        loss_fnc = torch.nn.BCELoss()
+        loss_fnc = torch.nn.CrossEntropyLoss()
         optimizer = torch.optim.Adam(model.parameters(), lr=lr)
     else:
         model = CNNReChord(samples_per_beat, beats_per_window, config=config, mode='simple')
-        loss_fnc = torch.nn.BCELoss()
+        loss_fnc = torch.nn.CrossEntropyLoss()
         optimizer = torch.optim.Adam(model.parameters(), lr=lr)
 
     return model, loss_fnc, optimizer
@@ -94,8 +94,8 @@ def main(batch_size, lr, epochs, config=0, pre_trained=-1):
                 optimizer.zero_grad()
 
                 # forward + backward + optimize
-                predictions = model(feats.float())
-                batch_loss = loss_fnc(input=predictions, target=label.float())
+                predictions = model(feats.float()).squeeze()
+                batch_loss = loss_fnc(input=predictions, target=label.argmax(dim=1))
 
                 batch_loss.backward()
                 optimizer.step()
@@ -126,4 +126,4 @@ def main(batch_size, lr, epochs, config=0, pre_trained=-1):
 
 
 if __name__ == "__main__":
-    main(64, 0.001, 50, config=0, pre_trained=49)
+    main(64, 0.001, 50, config=0, pre_trained=-1)
