@@ -35,6 +35,7 @@ class CNNReChord(nn.Module):
             # MLP layers
             self.fc1 = nn.Linear(size_after_conv, 64)
             self.fc2 = nn.Linear(64, 25)
+            self.act_fnc = nn.Softmax()
         else:
             raise NotImplementedError
 
@@ -47,7 +48,7 @@ class CNNReChord(nn.Module):
             x = x.view(-1, self.size_after_conv)
             x = self.fc1(x)
             x = self.fc2(x)
-            x = torch.sigmoid(x)
+            x = F.softmax(x, dim=1)
         else:
             raise NotImplementedError
 
