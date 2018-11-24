@@ -6,6 +6,8 @@ from dataset import ReChordDataset
 from model import CNNReChord
 import random
 
+# For using GPU
+device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
 
 samples_per_beat = 3072
 beats_per_window = 9
@@ -127,83 +129,13 @@ def load_data_new(batch_size, i):
 
     return train_loader, val_loader
 
-
 def load_data(batch_size, album, song):
-    chord_dic = {}
-    chord_dic['major'] = 0
-    chord_dic['minor'] = 0
-    features = np.empty([0, samples_per_beat * beats_per_window, 2])
-    labels = np.empty([0, encode_length])
-
-    # count the number of major and minor chords in this song
-    feature_file = './data/features/{}_{}_{}.npy'.format(album, song, '0')
-    label_file = './data/labels/{}_{}_{}.npy'.format(album, song, '0')
-    features = np.concatenate((features, np.load(feature_file)), axis=0)
-    labels = np.concatenate((labels, np.load(label_file)), axis=0)
-    dataset = ReChordDataset(features, labels)
-    for i in range(dataset.__len__()):
-        for j in range(24):
-            if dataset.y[i][j] == 1.0:
-                if j % 2 == 0:
-                    chord_dic['major'] += 1
-                else:
-                    chord_dic['minor'] += 1
-                break
-
     features = np.empty([0, samples_per_beat * beats_per_window, 2])
     labels = np.empty([0, encode_length])
 
     for pitch in ['-5', '-4', '-3', '-2', '-1', '0', '1', '2', '3', '4', '5', '6']:
-        feature_file = './data/features/{}_{}_{}.npy'.format(album, song, pitch)
-        label_file = './data/labels/{}_{}_{}.npy'.format(album, song, pitch)
-        tmp_feature = np.load(feature_file)
-        tmp_label = np.load(label_file)
-        arg_feature = np.empty([0, samples_per_beat * beats_per_window, 2])
-        arg_label = np.empty([0, encode_length])
-        count = 0
-
-        if chord_dic['major'] > chord_dic['minor']:
-            for m in range(tmp_label.shape[0]):
-                for x in range(encode_length):
-                    if tmp_label[m][x] == 1.0:
-                        if x % 2 == 0:
-                            count += 1
-                            if count <= chord_dic['minor']:
-                                arg_feature = np.concatenate((arg_feature, tmp_feature[m].reshape(1, tmp_feature.shape[1], tmp_feature.shape[2])), axis=0)
-                                arg_label = np.concatenate((arg_label, tmp_label[m].reshape(1, tmp_label.shape[1])), axis=0)
-                                # tmp_feature[m] = [[0, 0]]*samples_per_beat * beats_per_window
-                                # tmp_label[m][x] = 0
-                        else:
-                            arg_feature = np.concatenate(
-                                (arg_feature, tmp_feature[m].reshape(1, tmp_feature.shape[1], tmp_feature.shape[2])),
-                                axis=0)
-                            arg_label = np.concatenate((arg_label, tmp_label[m].reshape(1, tmp_label.shape[1])), axis=0)
-                        break
-        elif chord_dic['major'] < chord_dic['minor']:
-            count = 0
-            for n in range(tmp_label.shape[0]):
-                for y in range(encode_length):
-                    if tmp_label[n][y] == 1.0:
-                        if y % 2 == 1:
-                            count += 1
-                            if count <= chord_dic['major']:
-                                arg_feature = np.concatenate((arg_feature,
-                                                              tmp_feature[m].reshape(1, tmp_feature.shape[1],
-                                                                                     tmp_feature.shape[2])), axis=0)
-                                arg_label = np.concatenate(
-                                    (arg_label, tmp_label[m].reshape(1, tmp_label.shape[1])),
-                                    axis=0)
-                                # tmp_feature[n] = [[0, 0]] * samples_per_beat * beats_per_window
-                                # tmp_label[n][y] = 0
-                        else:
-                            arg_feature = np.concatenate(
-                                (arg_feature, tmp_feature[m].reshape(1, tmp_feature.shape[1], tmp_feature.shape[2])),
-                                axis=0)
-                            arg_label = np.concatenate((arg_label, tmp_label[m].reshape(1, tmp_label.shape[1])), axis=0)
-                        break
-
-        features = np.concatenate((features, arg_feature), axis=0)
-        labels = np.concatenate((labels, arg_label), axis=0)
+        features = np.concatenate((features, np.load('./data/features/{}_{}_{}.npy'.format(album, song, pitch))), axis=0)
+        labels = np.concatenate((labels, np.load('./data/labels/{}_{}_{}.npy'.format(album, song, pitch))), axis=0)
 
     train_data, val_data, train_label, val_label = train_test_split(features, labels, test_size=0.2)
 
@@ -223,7 +155,7 @@ def load_model(lr, config=0, pre_trained=-1):
         loss_fnc = torch.nn.CrossEntropyLoss()
         optimizer = torch.optim.Adam(model.parameters(), lr=lr)
     else:
-        model = CNNReChord(samples_per_beat, beats_per_window, config=config, mode='simple')
+        model = CNNReChord(samples_per_beat, beats_per_window, config=config, mode='simple').to(device)
         loss_fnc = torch.nn.CrossEntropyLoss()
         optimizer = torch.optim.Adam(model.parameters(), lr=lr)
 
@@ -235,10 +167,12 @@ def evaluate(model, val_loader):
     total_correct = 0
 
     for i, vbatch in enumerate(val_loader):
-        feats, label = vbatch
+        feats, labels = vbatch
         feats = np.swapaxes(feats, 1, 2)
+        feats = feats.to(device)
+        labels = labels.to(device)
         predictions = model(feats.float())
-        correct = predictions.argmax(dim=1) == label.argmax(dim=1)
+        correct = predictions.argmax(dim=1) == labels.argmax(dim=1)
         total_correct += int(correct.sum())
 
     return float(total_correct) / len(val_loader.dataset)
@@ -260,6 +194,9 @@ def main(batch_size, lr, epochs, config=0, pre_trained=-1):
                 # get the inputs
                 feats, label = batch
                 feats = np.swapaxes(feats, 1, 2)
+
+                feats = feats.to(device)
+                label = label.to(device)
 
                 # zero the parameter gradients
                 optimizer.zero_grad()
@@ -297,5 +234,4 @@ def main(batch_size, lr, epochs, config=0, pre_trained=-1):
 
 
 if __name__ == "__main__":
-    # load_data_new(64, 0)
     main(64, 0.001, 50, config=0, pre_trained=-1)
