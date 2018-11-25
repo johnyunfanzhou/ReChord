@@ -2,6 +2,7 @@ import numpy as np
 from scipy.io import wavfile
 import samplerate
 import csv
+import random
 
 
 """
@@ -180,6 +181,91 @@ class ChordReader:
             raise NotImplementedError
 
         return
+
+
+class DataBalancer:
+    def __init__(self, batches, data, samples_per_beat, beats_per_window, encode_length):
+        self.featpath = './data/features/'
+        self.labelpath = './data/labels/'
+
+        self.batches = batches
+        self.data = data
+        self.spb = samples_per_beat
+        self.bpw = beats_per_window
+        self.encode_length = encode_length
+
+    def __call__(self, b):
+        chord_dic = {'maj': 0, 'min': 0}
+        chord_ind_dic = {'maj': [], 'min': []}
+
+        print('\tLoading pitch 0 ...')
+
+        features0 = np.empty([0, self.spb * self.bpw, 2])
+        labels0 = np.empty([0, self.encode_length])
+        i = b
+        for album, song in self.data:
+            feature_file = '{}{}_{}_{}.npy'.format(self.featpath, album, song, '0')
+            label_file = '{}{}_{}_{}.npy'.format(self.labelpath, album, song, '0')
+
+            size = np.load(label_file).shape[0]
+            tmp_feature = np.load(feature_file)[int(i / 60 * size):int((1 + i) / 60 * size)]
+            tmp_label = np.load(label_file)[int(i / 60 * size):int((1 + i) / 60 * size)]
+
+            features0 = np.concatenate((features0, tmp_feature), axis=0)
+            labels0 = np.concatenate((labels0, tmp_label), axis=0)
+
+            i = (i + 1) % 60
+
+        total_size = features0.shape[0]
+
+        # counting the number of major and minor chords and storing their index
+        for j in range(total_size):
+            a = np.argmax(labels0[j], axis=0)
+            if a % 2 == 0 and a != 24:
+                chord_dic['maj'] += 1
+                chord_ind_dic['maj'].append(j)
+            if a % 2 == 1:
+                chord_dic['min'] += 1
+                chord_ind_dic['min'].append(j)
+
+        # balancing the data
+        if (chord_dic['maj'] == 0) or (chord_dic['min'] == 0):
+            return
+
+        threshold = min(chord_dic['maj'], chord_dic['min'])
+
+        chord_ind_dic['maj'] = np.random.permutation(chord_ind_dic['maj'])[:threshold]
+        chord_ind_dic['min'] = np.random.permutation(chord_ind_dic['min'])[:threshold]
+
+        indexes = np.concatenate((chord_ind_dic['maj'], chord_ind_dic['min']))
+
+        features = features0[indexes]
+        labels = labels0[indexes]
+
+        # loading other pitches
+        for pitch in ['-5', '-4', '-3', '-2', '-1', '1', '2', '3', '4', '5', '6']:
+            print('\tLoading pitch {} ...'.format(pitch))
+            features0 = np.empty([0, self.spb * self.bpw, 2])
+            labels0 = np.empty([0, self.encode_length])
+            i = b
+            for album, song in self.data:
+                feature_file = '{}{}_{}_{}.npy'.format(self.featpath, album, song, pitch)
+                label_file = '{}{}_{}_{}.npy'.format(self.labelpath, album, song, pitch)
+
+                size = np.load(label_file).shape[0]
+                tmp_feature = np.load(feature_file)[int(i / 60 * size):int((1 + i) / 60 * size)]
+                tmp_label = np.load(label_file)[int(i / 60 * size):int((1 + i) / 60 * size)]
+
+                features0 = np.concatenate((features0, tmp_feature), axis=0)
+                labels0 = np.concatenate((labels0, tmp_label), axis=0)
+
+                i = (i + 1) % 60
+
+            features = np.concatenate((features, features0[indexes]), axis=0)
+            labels = np.concatenate((labels, labels0[indexes]), axis=0)
+
+        return features, labels
+
 
 class SongReader:
     def __init__(self, samples_per_beat, beats_per_window):
