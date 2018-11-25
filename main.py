@@ -4,7 +4,6 @@ import torch
 from torch.utils.data import DataLoader
 from dataset import ReChordDataset
 from model import CNNReChord
-import random
 
 # For using GPU
 device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
@@ -33,6 +32,21 @@ def load_data(batch_size, album, song):
     for pitch in ['-5', '-4', '-3', '-2', '-1', '0', '1', '2', '3', '4', '5', '6']:
         features = np.concatenate((features, np.load('./data/features/{}_{}_{}.npy'.format(album, song, pitch))), axis=0)
         labels = np.concatenate((labels, np.load('./data/labels/{}_{}_{}.npy'.format(album, song, pitch))), axis=0)
+
+    train_data, val_data, train_label, val_label = train_test_split(features, labels, test_size=0.2)
+
+    train_dataset = ReChordDataset(train_data, train_label)
+    val_dataset = ReChordDataset(val_data, val_label)
+
+    train_loader = DataLoader(train_dataset, batch_size=batch_size, shuffle=True)
+    val_loader = DataLoader(val_dataset, batch_size=batch_size, shuffle=False)
+
+    return train_loader, val_loader
+
+
+def load_data_balanced(batch_size, data_batch_number):
+    features = np.load('./data/balanced_features/{}.npy'.format(data_batch_number))
+    labels = np.load('./data/balanced_labels/{}.npy'.format(data_batch_number))
 
     train_data, val_data, train_label, val_label = train_test_split(features, labels, test_size=0.2)
 
@@ -84,8 +98,11 @@ def main(batch_size, lr, epochs, config=0, pre_trained=-1):
         train_accuracy = []
         val_accuracy = []
 
-        for album, song in data:
-            train_loader, val_loader = load_data(batch_size, album, song)
+        # for album, song in data:
+        #     train_loader, val_loader = load_data(batch_size, album, song)
+
+        for k in range(60):
+            train_loader, val_loader = load_data_balanced(batch_size, k)
 
             for i, batch in enumerate(train_loader):
                 # get the inputs
@@ -111,8 +128,12 @@ def main(batch_size, lr, epochs, config=0, pre_trained=-1):
             train_accuracy.append(train_acc)
             val_accuracy.append(val_acc)
 
-            print('\tFinished album {}, song {} | Training accuracy: {} | Validation accuracy: {}'.format(
-                album, song, train_acc, val_acc
+            # print('\tFinished album {}, song {} | Training accuracy: {} | Validation accuracy: {}'.format(
+            #     album, song, train_acc, val_acc
+            # ))
+
+            print('\tFinished data batch number {} | Training accuracy: {} | Validation accuracy {}'.format(
+                k, train_acc, val_acc
             ))
 
         average_train_acc = sum(train_accuracy)/len(train_accuracy)
@@ -127,7 +148,7 @@ def main(batch_size, lr, epochs, config=0, pre_trained=-1):
             file.write('Preliminary model %d: Average training accuracy: %.4f | Average validation accuracy: %.4f\n' % (
                 epoch, average_train_acc, average_val_acc
             ))
-        print('Model saved as {}.'.format(model_file_name))
+        print('Model saved as {}.\n'.format(model_file_name))
 
 
 if __name__ == "__main__":
