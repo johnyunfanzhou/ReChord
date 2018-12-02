@@ -4,6 +4,9 @@ import torch
 from torch.utils.data import DataLoader
 from dataset import ReChordDataset
 from model import CNNReChord
+import matplotlib as plt
+from sklearn.metrics import confusion_matrix
+import itertools
 
 # For using GPU
 device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
@@ -63,10 +66,12 @@ def load_model(lr, config=0, pre_trained=-1):
     if pre_trained >= 0:
         model_file = './result/config{}/preliminary_model{}.pt'.format(config, pre_trained)
         model = torch.load(model_file)
+        model.cuda()
         loss_fnc = torch.nn.CrossEntropyLoss()
         optimizer = torch.optim.Adam(model.parameters(), lr=lr)
     else:
         model = CNNReChord(samples_per_beat, beats_per_window, config=config, mode='simple').to(device)
+        model.cuda()
         loss_fnc = torch.nn.CrossEntropyLoss()
         optimizer = torch.optim.Adam(model.parameters(), lr=lr)
 
@@ -132,13 +137,13 @@ def main(batch_size, lr, epochs, config=0, pre_trained=-1):
             #     album, song, train_acc, val_acc
             # ))
 
-            print('\tFinished data batch number {} | Training accuracy: {} | Validation accuracy {}'.format(
+            print('\tFinished data batch number %d | Training accuracy: %.6f | Validation accuracy %.6f' % (
                 k, train_acc, val_acc
             ))
 
         average_train_acc = sum(train_accuracy)/len(train_accuracy)
         average_val_acc = sum(val_accuracy)/len(val_accuracy)
-        print('Finished epoch {} | Average training accuracy: {} | Average validation accuracy: {}'.format(
+        print('Finished epoch %d | Average training accuracy: %.6f | Average validation accuracy: %.6f' % (
             epoch, average_train_acc, average_val_acc
         ))
 
@@ -152,4 +157,4 @@ def main(batch_size, lr, epochs, config=0, pre_trained=-1):
 
 
 if __name__ == "__main__":
-    main(64, 0.001, 50, config=0, pre_trained=-1)
+    main(64, 0.001, 50, config=8, pre_trained=2)

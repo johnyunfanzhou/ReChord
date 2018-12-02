@@ -301,12 +301,7 @@ class SongReader:
         sr, raw_wav = wavfile.read(path)
         length = raw_wav.shape[0]/sr
 
-        # Calculate the timing based on bpm and offset\
-        a = np.arange(length * bpm / 60)                # index of beats
-        beat = a * 60 / bpm + offset % (60 / bpm)       # timing of beats adjusted by offset
-        if beat[-1] > length:
-            beat = beat[:-1]
-
+        beat = self.get_beat(offset, bpm, length)
         beat = np.int32(sr * beat)
 
         num_beats = beat.shape[0]
@@ -328,3 +323,10 @@ class SongReader:
                     feature_window[i, ((j - 1) * self.spb):(j * self.spb), :] = feature_beat[i - j]
 
         return feature_window
+
+    def get_beat(self, offset, bpm, length):
+        # Calculate the timing based on bpm and offset\
+        a = np.arange((length - offset) * bpm / 60)  # index of beats
+        beat = a * 60 / bpm + offset  # timing of beats adjusted by offset
+
+        return beat
