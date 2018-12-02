@@ -1,0 +1,17 @@
+Preliminary model 0: Average training accuracy: 0.0556 | Average validation accuracy: 0.0451
+Preliminary model 1: Average training accuracy: 0.0657 | Average validation accuracy: 0.0547
+Preliminary model 2: Average training accuracy: 0.0745 | Average validation accuracy: 0.0643
+Preliminary model 3: Average training accuracy: 0.0771 | Average validation accuracy: 0.0670
+Preliminary model 4: Average training accuracy: 0.0808 | Average validation accuracy: 0.0668
+Preliminary model 5: Average training accuracy: 0.0846 | Average validation accuracy: 0.0665
+Preliminary model 6: Average training accuracy: 0.0862 | Average validation accuracy: 0.0704
+Preliminary model 7: Average training accuracy: 0.0909 | Average validation accuracy: 0.0749
+Preliminary model 8: Average training accuracy: 0.0941 | Average validation accuracy: 0.0802
+Preliminary model 9: Average training accuracy: 0.1012 | Average validation accuracy: 0.0813
+Preliminary model 10: Average training accuracy: 0.1046 | Average validation accuracy: 0.0841
+Preliminary model 11: Average training accuracy: 0.1051 | Average validation accuracy: 0.0825
+Preliminary model 12: Average training accuracy: 0.1101 | Average validation accuracy: 0.0900
+Preliminary model 13: Average training accuracy: 0.1071 | Average validation accuracy: 0.0856
+Preliminary model 14: Average training accuracy: 0.1049 | Average validation accuracy: 0.0848
+Preliminary model 15: Average training accuracy: 0.1010 | Average validation accuracy: 0.0831
+Preliminary model 16: Average training accuracy: 0.1044 | Average validation accuracy: 0.0855
